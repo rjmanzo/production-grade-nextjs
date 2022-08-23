@@ -16,7 +16,7 @@ const Blog = ({ posts }) => {
         <HomeNav />
       </header>
       <main>
-        <Container>
+              <Container>
           {posts.map((post) => (
             <Pane key={post.title} marginY={majorScale(5)}>
               <PostPreview post={post} />
@@ -30,6 +30,33 @@ const Blog = ({ posts }) => {
 
 Blog.defaultProps = {
   posts: [],
+}
+
+export function getStaticProps(ctx) {
+
+  /* CMS Posts */
+  const cmsPosts = (ctx.preview ? postsFromCMS.draft : postsFromCMS.published).map((post) => {
+    const {data} = matter(post)
+    return data
+  })
+
+  /*fileSystem posts */
+  const postsPath = path.join(process.cwd(), 'posts')
+  const filenames = fs.readdirSync(postsPath)
+  const filePosts = filenames.map(name => {
+    const fullPath = path.join(process.cwd(), 'posts', name)
+    const file = fs.readFileSync(fullPath, 'utf-8')
+    const { data } = matter(file)
+    return data
+  })
+
+  const posts = [...cmsPosts, ...filePosts];
+
+  return {
+    props: {
+      posts,
+    }
+  }
 }
 
 export default Blog
